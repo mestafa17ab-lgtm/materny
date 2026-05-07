@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>متجري | متجر الأحذية</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#" class="logo"><i class="fas fa-store"></i> متجري</a>
+      <div class="header-actions">
+        <a href="admin.html" class="btn-outline">
+          <i class="fas fa-cog"></i> الإدارة
+        </a>
+        <button class="cart-btn" onclick="toggleCart()">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <h1>أهلاً بك في <span>متجري</span></h1>
+      <p>أحذية مريحة وعصرية بأسعار مناسبة للجميع</p>
+    </div>
+  </section>
+
+  <!-- Products -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">منتجاتنا</h2>
+        <span id="productCount" style="color:#636e72;font-size:14px;"></span>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Cart Drawer -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3><i class="fas fa-shopping-bag"></i> سلة المشتريات</h3>
+      <button class="close-btn" onclick="toggleCart()">&times;</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <p class="cart-empty">السلة فارغة</p>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-total">
+        <span>المجموع:</span>
+        <span id="cartTotal">0 دج</span>
+      </div>
+      <button class="btn-primary" onclick="showCheckout()">
+        <i class="fas fa-check-circle"></i> إتمام الطلب
+      </button>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="modal-overlay" id="checkoutOverlay" onclick="closeCheckout()"></div>
+  <div class="modal" id="checkoutModal">
+    <div class="modal-header">
+      <h3><i class="fas fa-file-invoice"></i> إتمام الطلب</h3>
+      <button class="close-btn" onclick="closeCheckout()">&times;</button>
+    </div>
+    <form id="checkoutForm" onsubmit="submitOrder(event)">
+      <div class="form-group">
+        <label>الاسم الكامل</label>
+        <input type="text" id="customerName" required placeholder="أدخل اسمك الكامل">
+      </div>
+      <div class="form-group">
+        <label>الولاية</label>
+        <input type="text" id="customerState" required placeholder="مثال: الجزائر العاصمة، وهران، قسنطينة...">
+      </div>
+      <div class="form-group">
+        <label>البلدية</label>
+        <input type="text" id="customerCity" required placeholder="مثال: بلدية سيدي امحمد، حي بوسماعيل...">
+      </div>
+      <div class="form-group">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="customerPhone" required placeholder="05XX XX XX XX">
+        <small style="color:#636e72;font-size:12px;">سنقوم بالاتصال بك على هذا الرقم لتأكيد الطلب</small>
+      </div>
+
+      <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:10px;">
+        <h4 style="margin-bottom:10px;font-size:15px;color:#1a1a2e;">المنتجات المطلوبة:</h4>
+        <div id="checkoutItems" style="font-size:14px;"></div>
+        <div style="display:flex;justify-content:space-between;font-weight:800;margin-top:10px;padding-top:10px;border-top:2px solid #e94560;">
+          <span>المجموع النهائي:</span>
+          <span id="checkoutTotal" style="color:#e94560;">0 دج</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" style="width:100%;padding:15px;font-size:16px">
+        <i class="fas fa-paper-plane"></i> تأكيد الطلب
+      </button>
+    </form>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
