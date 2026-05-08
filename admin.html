@@ -445,9 +445,22 @@
               <small style="color:#636e72;font-size:12px;">أدخل الرقم مع مفتاح الدولة بدون + أو 00</small>
             </div>
             <div class="form-group">
+              <label>GitHub Token (لمزامنة الطلبات بين الأجهزة)</label>
+              <input type="password" id="setGithubToken" placeholder="ghp_...">
+              <small style="color:#636e72;font-size:12px;">
+                <a href="https://github.com/settings/tokens" target="_blank" style="color:#0984e3;">أنشئ توكن</a>
+                بصلاحية <strong>repo</strong> والصقه هنا
+              </small>
+            </div>
+            <div class="form-group">
               <label>كلمة السر (للإدارة)</label>
               <input type="text" id="setPassword" placeholder="أدخل كلمة سر جديدة">
               <small style="color:#636e72;font-size:12px;">اتركها فارغة إذا ما تحبش تغيرها</small>
+            </div>
+            <div style="margin-bottom:15px;">
+              <button type="button" class="btn-secondary" onclick="manualSync()" style="width:100%;">
+                <i class="fas fa-sync"></i> مزامنة الطلبات الآن
+              </button>
             </div>
             <button type="submit" class="btn-primary"><i class="fas fa-save"></i> حفظ الإعدادات</button>
           </form>
@@ -554,7 +567,6 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
 </body>
 </html>
