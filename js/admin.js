@@ -5,16 +5,16 @@ function getPassword() {
   return localStorage.getItem('materny_admin_pass') || DEFAULT_PASSWORD;
 }
 
-function checkLogin() {
+async function checkLogin() {
   const input = document.getElementById('loginPassword');
   const error = document.getElementById('loginError');
 
   if (input.value === getPassword()) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('adminLayout').classList.add('active');
-    loadDashboard();
+    await loadDashboard();
     renderProductsTable();
-    renderOrdersTable();
+    await renderOrdersTable();
     loadSettings();
     renderCategoriesList();
   } else {
@@ -32,7 +32,7 @@ function logout() {
 }
 
 // ===== Navigation =====
-function showSection(name, link) {
+async function showSection(name, link) {
   document.querySelectorAll('.admin-nav a').forEach(a => a.classList.remove('active'));
   if (link) link.classList.add('active');
 
@@ -48,17 +48,17 @@ function showSection(name, link) {
   };
   document.getElementById('pageTitle').innerHTML = titles[name] || '';
 
-  if (name === 'dashboard') loadDashboard();
+  if (name === 'dashboard') await loadDashboard();
   if (name === 'products') renderProductsTable();
-  if (name === 'orders') renderOrdersTable();
+  if (name === 'orders') await renderOrdersTable();
   if (name === 'categories') renderCategoriesList();
   if (name === 'settings') loadSettings();
 }
 
 // ===== Dashboard =====
-function loadDashboard() {
+async function loadDashboard() {
   const products = getProducts();
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  const orders = await SHARED_API.getOrders();
   const settings = getStoreSettings();
 
   document.getElementById('statProducts').textContent = products.length;
@@ -354,8 +354,8 @@ function filterOrders(status, btn) {
   renderOrdersTable();
 }
 
-function renderOrdersTable() {
-  let orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+async function renderOrdersTable() {
+  let orders = await SHARED_API.getOrders();
   const settings = getStoreSettings();
   const tbody = document.getElementById('ordersTableBody');
   const empty = document.getElementById('ordersEmpty');
@@ -405,20 +405,21 @@ function renderOrdersTable() {
   }).join('');
 }
 
-function updateOrderStatus(id, newStatus) {
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+async function updateOrderStatus(id, newStatus) {
+  const orders = await SHARED_API.getOrders();
   const o = orders.find(order => order.id === id);
   if (o) {
     o.status = newStatus;
     localStorage.setItem('materny_orders', JSON.stringify(orders));
+    await SHARED_API.saveOrders(orders);
     renderOrdersTable();
     loadDashboard();
     showToast(`✓ تم تحديث حالة الطلب #${String(id).slice(-6)}`, 'success');
   }
 }
 
-function viewOrder(id) {
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+async function viewOrder(id) {
+  const orders = await SHARED_API.getOrders();
   const o = orders.find(o => o.id === id);
   if (!o) return;
 
@@ -474,13 +475,13 @@ function closeOrderModal() {
   document.getElementById('orderOverlay').classList.remove('active');
 }
 
-function whatsappOrder(id) {
+async function whatsappOrder(id) {
   const settings = getStoreSettings();
   if (!settings.whatsapp) {
     showToast('رقم الواتساب غير مضبوط في الإعدادات', 'error');
     return;
   }
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  const orders = await SHARED_API.getOrders();
   const o = orders.find(order => order.id === id);
   if (!o) return;
 
@@ -499,10 +500,10 @@ function whatsappOrder(id) {
   window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function editOrderStatus(id) {
+async function editOrderStatus(id) {
   const newStatus = prompt('أدخل الحالة الجديدة (جديد، قيد المعالجة، تم الشحن، تم التوصيل، مكتمل، ملغي):');
   if (newStatus && ['جديد', 'قيد المعالجة', 'تم الشحن', 'تم التوصيل', 'مكتمل', 'ملغي'].includes(newStatus.trim())) {
-    updateOrderStatus(id, newStatus.trim());
+    await updateOrderStatus(id, newStatus.trim());
   } else if (newStatus) {
     showToast('حالة غير صالحة!', 'error');
   }
@@ -575,30 +576,32 @@ function printOrder(id) {
   printWindow.document.close();
 }
 
-function completeOrder(id) {
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+async function completeOrder(id) {
+  const orders = await SHARED_API.getOrders();
   const o = orders.find(o => o.id === id);
   if (o) {
     o.status = 'مكتمل';
     localStorage.setItem('materny_orders', JSON.stringify(orders));
+    await SHARED_API.saveOrders(orders);
     renderOrdersTable();
     loadDashboard();
     showToast('✓ تم تأكيد إكمال الطلب', 'success');
   }
 }
 
-function deleteOrder(id) {
+async function deleteOrder(id) {
   if (!confirm('واش متأكد من حذف هذا الطلب؟')) return;
-  let orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  let orders = await SHARED_API.getOrders();
   orders = orders.filter(o => o.id !== id);
   localStorage.setItem('materny_orders', JSON.stringify(orders));
+  await SHARED_API.saveOrders(orders);
   renderOrdersTable();
   loadDashboard();
   showToast('✓ تم حذف الطلب', 'success');
 }
 
-function exportOrdersCSV() {
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+async function exportOrdersCSV() {
+  const orders = await SHARED_API.getOrders();
   if (orders.length === 0) {
     showToast('لا توجد طلبات للتصدير', 'error');
     return;
@@ -645,9 +648,10 @@ function saveSettings(e) {
 }
 
 // ===== Danger Zone =====
-function clearOrders() {
+async function clearOrders() {
   if (!confirm('واش متأكد من حذف جميع الطلبات؟')) return;
   localStorage.setItem('materny_orders', JSON.stringify([]));
+  await SHARED_API.saveOrders([]);
   renderOrdersTable();
   loadDashboard();
   showToast('✓ تم حذف جميع الطلبات', 'success');
