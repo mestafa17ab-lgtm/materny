@@ -1,3 +1,44 @@
+// ===== GitHub Sync Helpers =====
+function getGithubToken() {
+  const s = getStoreSettings();
+  return s.github_token || '';
+}
+
+async function syncOrdersFromGithub() {
+  const token = getGithubToken();
+  if (!token) return JSON.parse(localStorage.getItem('materny_orders')) || [];
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/mestafa17ab-lgtm/materny/main/data/orders.json?' + Date.now());
+    const data = await res.json();
+    const orders = data.orders || [];
+    localStorage.setItem('materny_orders', JSON.stringify(orders));
+    return orders;
+  } catch (e) {
+    return JSON.parse(localStorage.getItem('materny_orders')) || [];
+  }
+}
+
+async function syncOrdersToGithub(orders) {
+  const token = getGithubToken();
+  if (!token) return false;
+  try {
+    localStorage.setItem('materny_orders', JSON.stringify(orders));
+    const r1 = await fetch('https://api.github.com/repos/mestafa17ab-lgtm/materny/contents/data/orders.json', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const current = await r1.json();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ orders: orders }, null, 2))));
+    const r2 = await fetch('https://api.github.com/repos/mestafa17ab-lgtm/materny/contents/data/orders.json', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'تحديث الطلبات', content: content, sha: current.sha })
+    });
+    return r2.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ===== Auth =====
 const DEFAULT_PASSWORD = 'admin123';
 
@@ -58,7 +99,7 @@ async function showSection(name, link) {
 // ===== Dashboard =====
 async function loadDashboard() {
   const products = getProducts();
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   const settings = getStoreSettings();
 
   document.getElementById('statProducts').textContent = products.length;
@@ -355,7 +396,7 @@ function filterOrders(status, btn) {
 }
 
 async function renderOrdersTable() {
-  let orders = await SHARED_API.getOrders();
+  let orders = await syncOrdersFromGithub();
   const settings = getStoreSettings();
   const tbody = document.getElementById('ordersTableBody');
   const empty = document.getElementById('ordersEmpty');
@@ -406,12 +447,12 @@ async function renderOrdersTable() {
 }
 
 async function updateOrderStatus(id, newStatus) {
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   const o = orders.find(order => order.id === id);
   if (o) {
     o.status = newStatus;
     localStorage.setItem('materny_orders', JSON.stringify(orders));
-    await SHARED_API.saveOrders(orders);
+    await syncOrdersToGithub(orders);
     renderOrdersTable();
     loadDashboard();
     showToast(`✓ تم تحديث حالة الطلب #${String(id).slice(-6)}`, 'success');
@@ -419,7 +460,7 @@ async function updateOrderStatus(id, newStatus) {
 }
 
 async function viewOrder(id) {
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   const o = orders.find(o => o.id === id);
   if (!o) return;
 
@@ -481,7 +522,7 @@ async function whatsappOrder(id) {
     showToast('رقم الواتساب غير مضبوط في الإعدادات', 'error');
     return;
   }
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   const o = orders.find(order => order.id === id);
   if (!o) return;
 
@@ -577,12 +618,12 @@ function printOrder(id) {
 }
 
 async function completeOrder(id) {
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   const o = orders.find(o => o.id === id);
   if (o) {
     o.status = 'مكتمل';
     localStorage.setItem('materny_orders', JSON.stringify(orders));
-    await SHARED_API.saveOrders(orders);
+    await syncOrdersToGithub(orders);
     renderOrdersTable();
     loadDashboard();
     showToast('✓ تم تأكيد إكمال الطلب', 'success');
@@ -591,17 +632,17 @@ async function completeOrder(id) {
 
 async function deleteOrder(id) {
   if (!confirm('واش متأكد من حذف هذا الطلب؟')) return;
-  let orders = await SHARED_API.getOrders();
+  let orders = await syncOrdersFromGithub();
   orders = orders.filter(o => o.id !== id);
   localStorage.setItem('materny_orders', JSON.stringify(orders));
-  await SHARED_API.saveOrders(orders);
+  await syncOrdersToGithub(orders);
   renderOrdersTable();
   loadDashboard();
   showToast('✓ تم حذف الطلب', 'success');
 }
 
 async function exportOrdersCSV() {
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   if (orders.length === 0) {
     showToast('لا توجد طلبات للتصدير', 'error');
     return;
@@ -628,6 +669,7 @@ function loadSettings() {
   document.getElementById('setStoreName').value = settings.storeName || 'متجري';
   document.getElementById('setCurrency').value = settings.currency || 'دج';
   document.getElementById('setWhatsapp').value = settings.whatsapp || '';
+  document.getElementById('setGithubToken').value = settings.github_token || '';
   document.getElementById('setPassword').value = '';
 }
 
@@ -636,9 +678,15 @@ function saveSettings(e) {
   const storeName = document.getElementById('setStoreName').value.trim();
   const currency = document.getElementById('setCurrency').value.trim();
   const whatsapp = document.getElementById('setWhatsapp').value.trim();
+  const githubToken = document.getElementById('setGithubToken').value.trim();
   const newPass = document.getElementById('setPassword').value.trim();
 
-  localStorage.setItem('materny_settings', JSON.stringify({ storeName, currency, whatsapp }));
+  localStorage.setItem('materny_settings', JSON.stringify({
+    storeName,
+    currency,
+    whatsapp,
+    github_token: githubToken || undefined
+  }));
 
   if (newPass) {
     localStorage.setItem('materny_admin_pass', newPass);
@@ -647,11 +695,20 @@ function saveSettings(e) {
   showToast('✓ تم حفظ الإعدادات', 'success');
 }
 
+async function manualSync() {
+  showToast('جاري مزامنة الطلبات...', '');
+  const orders = await syncOrdersFromGithub();
+  renderOrdersTable();
+  renderProductsTable();
+  loadDashboard();
+  showToast(`✓ تمت المزامنة - ${orders.length} طلب`, 'success');
+}
+
 // ===== Danger Zone =====
 async function clearOrders() {
   if (!confirm('واش متأكد من حذف جميع الطلبات؟')) return;
   localStorage.setItem('materny_orders', JSON.stringify([]));
-  await SHARED_API.saveOrders([]);
+  await syncOrdersToGithub([]);
   renderOrdersTable();
   loadDashboard();
   showToast('✓ تم حذف جميع الطلبات', 'success');
