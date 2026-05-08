@@ -13,7 +13,14 @@
   <header class="header">
     <div class="container header-inner">
       <a href="#" class="logo"><i class="fas fa-store"></i> متجري</a>
+      <div class="header-search" id="headerSearch">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" placeholder="ابحث عن منتج..." oninput="filterProducts()">
+      </div>
       <div class="header-actions">
+        <button class="icon-btn" onclick="toggleSearch()" title="بحث">
+          <i class="fas fa-search"></i>
+        </button>
         <a href="admin.html" class="btn-outline">
           <i class="fas fa-cog"></i> الإدارة
         </a>
@@ -23,24 +30,90 @@
         </button>
       </div>
     </div>
+    <!-- Mobile Search (hidden by default) -->
+    <div class="mobile-search" id="mobileSearch">
+      <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج..." oninput="filterProducts()">
+    </div>
   </header>
 
   <!-- Hero -->
   <section class="hero">
-    <div class="container">
-      <h1>أهلاً بك في <span>متجري</span></h1>
+    <div class="hero-bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+    <div class="container hero-content">
+      <h1>أهلاً بك في <span id="heroStoreName">متجري</span></h1>
       <p>أحذية مريحة وعصرية بأسعار مناسبة للجميع</p>
+      <div class="hero-badges">
+        <span class="hero-badge"><i class="fas fa-truck"></i> توصيل مجاني</span>
+        <span class="hero-badge"><i class="fas fa-undo-alt"></i> إرجاع خلال 7 أيام</span>
+        <span class="hero-badge"><i class="fas fa-shield-alt"></i> دفع آمن</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Filters -->
+  <section class="section section-categories">
+    <div class="container">
+      <div class="category-filters" id="categoryFilters"></div>
     </div>
   </section>
 
   <!-- Products -->
-  <section class="section">
+  <section class="section section-products">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">منتجاتنا</h2>
-        <span id="productCount" style="color:#636e72;font-size:14px;"></span>
+        <span id="productCount" class="product-count"></span>
       </div>
       <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Order Tracking Section -->
+  <section class="section section-track" style="background:#f8f9fa;">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">تتبع طلبك</h2>
+      </div>
+      <div class="track-form">
+        <p style="color:#636e72;margin-bottom:12px;">أدخل رقم هاتفك لتتبع حالة طلبك</p>
+        <div class="track-input-group">
+          <input type="tel" id="trackPhone" placeholder="05XX XX XX XX" onkeydown="if(event.key==='Enter')trackOrder()">
+          <button class="btn-primary" onclick="trackOrder()"><i class="fas fa-search"></i> تتبع</button>
+        </div>
+        <div id="trackResult" style="margin-top:20px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-truck"></i></div>
+          <h4>توصيل سريع</h4>
+          <p>نوصل لجميع الولايات خلال 3-5 أيام عمل</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-undo-alt"></i></div>
+          <h4>إرجاع مجاني</h4>
+          <p>يمكنك إرجاع المنتج خلال 7 أيام</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-headset"></i></div>
+          <h4>دعم فني</h4>
+          <p>فريقنا جاهز لمساعدتك على مدار الساعة</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+          <h4>دفع آمن</h4>
+          <p>الدفع عند الاستلام - آمن ومضمون</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -63,6 +136,13 @@
         <i class="fas fa-check-circle"></i> إتمام الطلب
       </button>
     </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div class="modal-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+  <div class="modal modal-detail" id="detailModal">
+    <button class="close-btn modal-close" onclick="closeDetail()">&times;</button>
+    <div id="detailContent" class="detail-content"></div>
   </div>
 
   <!-- Checkout Modal -->
@@ -91,16 +171,22 @@
         <small style="color:#636e72;font-size:12px;">سنقوم بالاتصال بك على هذا الرقم لتأكيد الطلب</small>
       </div>
 
-      <div style="margin:20px 0; padding:15px; background:#f8f9fa; border-radius:10px;">
+      <div class="checkout-summary">
         <h4 style="margin-bottom:10px;font-size:15px;color:#1a1a2e;">المنتجات المطلوبة:</h4>
         <div id="checkoutItems" style="font-size:14px;"></div>
-        <div style="display:flex;justify-content:space-between;font-weight:800;margin-top:10px;padding-top:10px;border-top:2px solid #e94560;">
+        <div class="checkout-total-final">
           <span>المجموع النهائي:</span>
           <span id="checkoutTotal" style="color:#e94560;">0 دج</span>
         </div>
+        <div class="checkout-whatsapp" id="checkoutWhatsapp" style="display:none;">
+          <p style="font-size:12px;color:#636e72;margin-top:10px;">أو أرسل الطلب عبر واتساب:</p>
+          <button type="button" class="btn-whatsapp" onclick="sendWhatsAppOrder()">
+            <i class="fab fa-whatsapp"></i> واتساب
+          </button>
+        </div>
       </div>
 
-      <button type="submit" class="btn-primary" style="width:100%;padding:15px;font-size:16px">
+      <button type="submit" class="btn-primary btn-submit-order">
         <i class="fas fa-paper-plane"></i> تأكيد الطلب
       </button>
     </form>
