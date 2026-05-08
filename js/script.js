@@ -6,12 +6,17 @@ function getProducts() {
 function getStoreSettings() {
   return JSON.parse(localStorage.getItem('materny_settings')) || {
     storeName: 'متجري',
-    currency: 'دج'
+    currency: 'دج',
+    whatsapp: ''
   };
 }
 
 // ===== Cart =====
 let cart = JSON.parse(localStorage.getItem('materny_cart')) || [];
+
+// ===== Filter State =====
+let activeCategory = 'all';
+let searchQuery = '';
 
 // DOM
 const productsGrid = document.getElementById('productsGrid');
@@ -28,10 +33,70 @@ const checkoutTotal = document.getElementById('checkoutTotal');
 const toast = document.getElementById('toast');
 const productCount = document.getElementById('productCount');
 
+// ===== Search & Filter =====
+function toggleSearch() {
+  const ms = document.getElementById('mobileSearch');
+  ms.classList.toggle('active');
+  if (ms.classList.contains('active')) {
+    document.getElementById('mobileSearchInput').focus();
+  }
+}
+
+function filterProducts() {
+  const input = document.getElementById('searchInput') || document.getElementById('mobileSearchInput');
+  searchQuery = input.value.trim().toLowerCase();
+  renderProducts();
+}
+
+function setCategory(category) {
+  activeCategory = category;
+  document.querySelectorAll('.category-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.category === category);
+  });
+  renderProducts();
+}
+
+// ===== Get unique categories =====
+function getCategories(products) {
+  const cats = new Set();
+  products.forEach(p => { if (p.category) cats.add(p.category); });
+  return ['all', ...Array.from(cats)];
+}
+
+function getCategoryLabel(cat) {
+  const labels = { all: 'الكل' };
+  return labels[cat] || cat;
+}
+
+// ===== Render Category Filters =====
+function renderCategories() {
+  const container = document.getElementById('categoryFilters');
+  const products = getProducts();
+  const categories = getCategories(products);
+
+  if (categories.length <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = categories.map(cat =>
+    `<button class="category-chip ${cat === activeCategory ? 'active' : ''}" data-category="${cat}" onclick="setCategory('${cat}')">
+      ${getCategoryLabel(cat)}
+    </button>`
+  ).join('');
+}
+
 // ===== Render Products =====
 function renderProducts() {
   const products = getProducts();
   const settings = getStoreSettings();
+  const filtered = products.filter(p => {
+    const matchCategory = activeCategory === 'all' || p.category === activeCategory;
+    const matchSearch = !searchQuery ||
+      p.name.toLowerCase().includes(searchQuery) ||
+      (p.description && p.description.toLowerCase().includes(searchQuery));
+    return matchCategory && matchSearch;
+  });
 
   if (products.length === 0) {
     productsGrid.innerHTML = `
@@ -44,31 +109,122 @@ function renderProducts() {
     return;
   }
 
-  if (productCount) {
-    productCount.textContent = `${products.length} منتج`;
+  if (filtered.length === 0) {
+    productsGrid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:#b2bec3;">
+        <i class="fas fa-search" style="font-size:50px;display:block;margin-bottom:15px;"></i>
+        <p>لا توجد نتائج للبحث</p>
+      </div>
+    `;
+    if (productCount) productCount.textContent = '0 منتج';
+    return;
   }
 
-  productsGrid.innerHTML = products.map(p => {
+  if (productCount) {
+    productCount.textContent = `${filtered.length} منتج`;
+  }
+
+  productsGrid.innerHTML = filtered.map(p => {
     const imgHtml = p.image
-      ? `<img src="${p.image}" alt="${p.name}">`
+      ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
       : `<i class="fas ${p.icon || 'fa-shoe-prints'} default-icon"></i>`;
 
+    const badgeHtml = getProductBadge(p);
+    const stockHtml = getStockBadge(p);
+    const whatsapp = getStoreSettings().whatsapp;
+    const whatsappBtn = whatsapp ? `<a href="https://wa.me/${whatsapp}?text=${encodeURIComponent('ممكن طلب: ' + p.name)}" target="_blank" class="btn-whatsapp-sm" onclick="event.stopPropagation()"><i class="fab fa-whatsapp"></i> واتساب</a>` : '';
+
     return `
-      <div class="product-card">
-        <div class="product-image">${imgHtml}</div>
+      <div class="product-card" onclick="showProductDetail(${p.id})">
+        <div class="product-image">
+          ${imgHtml}
+          ${badgeHtml}
+          ${stockHtml}
+        </div>
         <div class="product-info">
           <h3 class="product-name">${p.name}</h3>
           ${p.description ? `<p class="product-desc">${p.description}</p>` : ''}
           <div class="product-bottom">
-            <span class="product-price">${p.price} <small>${settings.currency}</small></span>
-            <button class="btn-add" onclick="addToCart(${p.id})">
-              <i class="fas fa-plus"></i> أضف للسلة
-            </button>
+            <div>
+              <span class="product-price">${p.price} <small>${settings.currency}</small></span>
+              ${p.oldPrice ? `<span class="product-old-price">${p.oldPrice} ${settings.currency}</span>` : ''}
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              ${whatsappBtn}
+              <button class="btn-add" onclick="event.stopPropagation();addToCart(${p.id})">
+                <i class="fas fa-plus"></i> <span>أضف</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function getProductBadge(p) {
+  if (p.badge === 'featured') return '<span class="product-badge featured"><i class="fas fa-star"></i> مميز</span>';
+  if (p.badge === 'sale') return '<span class="product-badge sale"><i class="fas fa-fire"></i> تخفيض</span>';
+  if (p.badge === 'new') return '<span class="product-badge new"><i class="fas fa-tag"></i> جديد</span>';
+  return '';
+}
+
+function getStockBadge(p) {
+  if (p.stock !== undefined) {
+    if (p.stock <= 0) return '<span class="product-stock-badge out-of-stock">غير متوفر</span>';
+    if (p.stock <= 5) return '<span class="product-stock-badge in-stock">متبقي ${p.stock} فقط</span>';
+  }
+  return '';
+}
+
+// ===== Product Detail =====
+function showProductDetail(productId) {
+  const products = getProducts();
+  const p = products.find(p => p.id === productId);
+  if (!p) return;
+
+  const settings = getStoreSettings();
+  const content = document.getElementById('detailContent');
+
+  const imgHtml = p.image
+    ? `<img src="${p.image}" alt="${p.name}">`
+    : `<i class="fas ${p.icon || 'fa-shoe-prints'} default-icon"></i>`;
+
+  const whatsapp = settings.whatsapp;
+  const whatsappText = encodeURIComponent(`مرحبا، أريد طلب:\n\n${p.name}\nالسعر: ${p.price} ${settings.currency}\n\nالرجاء تأكيد الطلب`);
+  const whatsappBtn = whatsapp
+    ? `<a href="https://wa.me/${whatsapp}?text=${whatsappText}" target="_blank" class="btn-whatsapp"><i class="fab fa-whatsapp"></i> طلب عبر واتساب</a>`
+    : '';
+
+  const badgeHtml = getProductBadge(p);
+
+  content.innerHTML = `
+    <div class="detail-image">
+      ${imgHtml}
+      ${badgeHtml}
+    </div>
+    <div class="detail-info">
+      ${p.category ? `<span class="detail-category"><i class="fas fa-tag"></i> ${p.category}</span>` : ''}
+      <h2>${p.name}</h2>
+      ${p.description ? `<p class="detail-desc">${p.description}</p>` : '<p class="detail-desc" style="color:#b2bec3;">لا يوجد وصف لهذا المنتج</p>'}
+      <div class="detail-price">${p.price} <small>${settings.currency}</small></div>
+      ${p.oldPrice ? `<div class="detail-old-price">${p.oldPrice} ${settings.currency}</div>` : ''}
+      <div class="detail-actions">
+        <button class="btn-primary" onclick="closeDetail();addToCart(${p.id})">
+          <i class="fas fa-shopping-bag"></i> أضف إلى السلة
+        </button>
+        ${whatsappBtn}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detailModal').classList.add('active');
+  document.getElementById('detailOverlay').classList.add('active');
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').classList.remove('active');
+  document.getElementById('detailOverlay').classList.remove('active');
 }
 
 // ===== Cart Functions =====
@@ -77,9 +233,18 @@ function addToCart(productId) {
   const product = products.find(p => p.id === productId);
   if (!product) return;
 
+  if (product.stock !== undefined && product.stock <= 0) {
+    showToast('عذراً، هذا المنتج غير متوفر حالياً', 'error');
+    return;
+  }
+
   const existing = cart.find(item => item.id === productId);
 
   if (existing) {
+    if (product.stock !== undefined && existing.qty >= product.stock) {
+      showToast('عذراً، الكمية المتوفرة غير كافية', 'error');
+      return;
+    }
     existing.qty += 1;
   } else {
     cart.push({ ...product, qty: 1 });
@@ -186,6 +351,14 @@ function showCheckout() {
   ).join('');
 
   checkoutTotal.textContent = `${getCartTotal()} ${settings.currency}`;
+
+  const whatsappEl = document.getElementById('checkoutWhatsapp');
+  if (settings.whatsapp) {
+    whatsappEl.style.display = 'block';
+  } else {
+    whatsappEl.style.display = 'none';
+  }
+
   checkoutModal.classList.add('active');
   checkoutOverlay.classList.add('active');
 }
@@ -193,6 +366,26 @@ function showCheckout() {
 function closeCheckout() {
   checkoutModal.classList.remove('active');
   checkoutOverlay.classList.remove('active');
+}
+
+function sendWhatsAppOrder() {
+  const settings = getStoreSettings();
+  if (!settings.whatsapp) {
+    showToast('رقم الواتساب غير مضبوط في الإعدادات', 'error');
+    return;
+  }
+
+  let msg = 'مرحباً، أريد طلب:\n\n';
+  cart.forEach(item => {
+    msg += `- ${item.name} × ${item.qty} = ${item.price * item.qty} ${settings.currency}\n`;
+  });
+  msg += `\nالمجموع: ${getCartTotal()} ${settings.currency}`;
+  msg += `\n\nالاسم: ${document.getElementById('customerName').value || '(لم يحدد)'}`;
+  msg += `\nالولاية: ${document.getElementById('customerState').value || '(لم يحدد)'}`;
+  msg += `\nالبلدية: ${document.getElementById('customerCity').value || '(لم يحدد)'}`;
+  msg += `\nالهاتف: ${document.getElementById('customerPhone').value || '(لم يحدد)'}`;
+
+  window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // ===== Submit Order =====
@@ -216,6 +409,16 @@ function submitOrder(e) {
   orders.unshift(order);
   localStorage.setItem('materny_orders', JSON.stringify(orders));
 
+  // Decrease stock
+  const products = getProducts();
+  cart.forEach(cartItem => {
+    const prod = products.find(p => p.id === cartItem.id);
+    if (prod && prod.stock !== undefined) {
+      prod.stock = Math.max(0, prod.stock - cartItem.qty);
+    }
+  });
+  localStorage.setItem('materny_products', JSON.stringify(products));
+
   cart = [];
   saveCart();
   renderCart();
@@ -223,6 +426,80 @@ function submitOrder(e) {
   document.getElementById('checkoutForm').reset();
 
   showToast(`✓ تم استلام الطلب بنجاح! رقم الطلب: #${order.id}`, 'success');
+
+  // Send WhatsApp notification if configured
+  if (settings.whatsapp) {
+    let msg = `طلب جديد #${order.id}\n\n`;
+    msg += `الاسم: ${order.name}\n`;
+    msg += `الهاتف: ${order.phone}\n`;
+    msg += `الولاية: ${order.state}\n`;
+    msg += `البلدية: ${order.city}\n\n`;
+    msg += `المنتجات:\n`;
+    order.items.forEach(item => {
+      msg += `- ${item.name} × ${item.qty} = ${item.price * item.qty} ${settings.currency}\n`;
+    });
+    msg += `\nالمجموع: ${order.total} ${settings.currency}`;
+    window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+}
+
+// ===== Order Tracking =====
+function trackOrder() {
+  const phone = document.getElementById('trackPhone').value.trim();
+  const result = document.getElementById('trackResult');
+
+  if (!phone) {
+    result.innerHTML = '<p class="track-no-results">الرجاء إدخال رقم الهاتف</p>';
+    return;
+  }
+
+  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  const userOrders = orders.filter(o => o.phone === phone);
+
+  if (userOrders.length === 0) {
+    result.innerHTML = '<p class="track-no-results">لا توجد طلبات بهذا الرقم</p>';
+    return;
+  }
+
+  result.innerHTML = userOrders.map(o => {
+    const statusSteps = ['جديد', 'قيد المعالجة', 'تم الشحن', 'تم التوصيل', 'مكتمل'];
+    const currentIdx = statusSteps.indexOf(o.status);
+    const activeIdx = currentIdx >= 0 ? currentIdx : 0;
+
+    const stepsHtml = statusSteps.map((step, i) => {
+      let cls = '';
+      if (i < activeIdx) cls = 'done';
+      else if (i === activeIdx) cls = 'active';
+      const connectLine = i < statusSteps.length - 1
+        ? `<div class="track-connect-line"></div>`
+        : '';
+      return `
+        <div class="track-status-step ${cls}">
+          ${connectLine}
+          <div class="step-dot"></div>
+          <span class="step-label">${step}</span>
+        </div>
+      `;
+    }).join('');
+
+    const itemsList = o.items.map(item => `${item.name} ×${item.qty}`).join(', ');
+
+    return `
+      <div class="track-card">
+        <div class="track-card-header">
+          <span class="order-num">طلب #${o.id}</span>
+          <span class="order-date">${o.date}</span>
+        </div>
+        <div class="track-status-bar">
+          ${stepsHtml}
+        </div>
+        <div class="track-card-info">
+          <strong>المنتجات:</strong> <span class="track-items">${itemsList}</span><br>
+          <strong>المجموع:</strong> ${o.total} دج
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ===== Toast =====
@@ -240,9 +517,31 @@ function updateStoreName() {
   logos.forEach(el => {
     el.innerHTML = `<i class="fas fa-store"></i> ${settings.storeName}`;
   });
+  const heroName = document.getElementById('heroStoreName');
+  if (heroName) heroName.textContent = settings.storeName;
+  document.title = `${settings.storeName} | متجر إلكتروني`;
 }
 
 // ===== Init =====
-updateStoreName();
-renderProducts();
-renderCart();
+function init() {
+  updateStoreName();
+  renderCategories();
+  renderProducts();
+  renderCart();
+}
+
+// Sync search input fields
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('searchInput');
+  const mobileSearchInput = document.getElementById('mobileSearchInput');
+  if (searchInput && mobileSearchInput) {
+    searchInput.addEventListener('input', function() {
+      mobileSearchInput.value = this.value;
+    });
+    mobileSearchInput.addEventListener('input', function() {
+      searchInput.value = this.value;
+    });
+  }
+});
+
+init();
