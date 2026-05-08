@@ -10,24 +10,47 @@ async function syncOrdersFromGithub() {
   try {
     const res = await fetch('https://raw.githubusercontent.com/mestafa17ab-lgtm/materny/main/data/orders.json?' + Date.now());
     const data = await res.json();
-    const orders = data.orders || [];
-    localStorage.setItem('materny_orders', JSON.stringify(orders));
-    return orders;
+    const remoteOrders = data.orders || [];
+    // Merge: keep local orders not in remote, add remote orders
+    const localOrders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+    const merged = [...localOrders];
+    for (const ro of remoteOrders) {
+      if (!merged.find(mo => mo.id === ro.id)) {
+        merged.push(ro);
+      }
+    }
+    merged.sort((a, b) => b.id - a.id);
+    localStorage.setItem('materny_orders', JSON.stringify(merged));
+    return merged;
   } catch (e) {
     return JSON.parse(localStorage.getItem('materny_orders')) || [];
   }
 }
 
-async function syncOrdersToGithub(orders) {
+async function syncOrdersToGithub(localOrders) {
   const token = getGithubToken();
   if (!token) return false;
   try {
-    localStorage.setItem('materny_orders', JSON.stringify(orders));
+    // Merge with remote first to avoid overwriting
+    let allOrders = [...localOrders];
+    try {
+      const res = await fetch('https://raw.githubusercontent.com/mestafa17ab-lgtm/materny/main/data/orders.json?' + Date.now());
+      const data = await res.json();
+      const remoteOrders = data.orders || [];
+      for (const ro of remoteOrders) {
+        if (!allOrders.find(mo => mo.id === ro.id)) {
+          allOrders.push(ro);
+        }
+      }
+    } catch (e) { /* remote not available, use local only */ }
+    allOrders.sort((a, b) => b.id - a.id);
+
+    localStorage.setItem('materny_orders', JSON.stringify(allOrders));
     const r1 = await fetch('https://api.github.com/repos/mestafa17ab-lgtm/materny/contents/data/orders.json', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     const current = await r1.json();
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ orders: orders }, null, 2))));
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ orders: allOrders }, null, 2))));
     const r2 = await fetch('https://api.github.com/repos/mestafa17ab-lgtm/materny/contents/data/orders.json', {
       method: 'PUT',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -35,6 +58,7 @@ async function syncOrdersToGithub(orders) {
     });
     return r2.ok;
   } catch (e) {
+    console.error('syncOrdersToGithub error:', e);
     return false;
   }
 }
@@ -695,13 +719,26 @@ function saveSettings(e) {
   showToast('✓ تم حفظ الإعدادات', 'success');
 }
 
-async function manualSync() {
-  showToast('جاري مزامنة الطلبات...', '');
+async function pushOrders() {
+  const token = getGithubToken();
+  if (!token) { showToast('الرجاء إدخال GitHub Token في الإعدادات أولاً', 'error'); return; }
+  showToast('جاري رفع الطلبات...', '');
+  const localOrders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  if (localOrders.length === 0) { showToast('لا توجد طلبات محلية للرفع', 'error'); return; }
+  const ok = await syncOrdersToGithub(localOrders);
+  if (ok) showToast(`✓ تم رفع ${localOrders.length} طلب إلى GitHub`, 'success');
+  else showToast('فشل الرفع! تحقق من التوكن', 'error');
+}
+
+async function pullOrders() {
+  const token = getGithubToken();
+  if (!token) { showToast('الرجاء إدخال GitHub Token في الإعدادات أولاً', 'error'); return; }
+  showToast('جاري تحميل الطلبات...', '');
   const orders = await syncOrdersFromGithub();
   renderOrdersTable();
   renderProductsTable();
   loadDashboard();
-  showToast(`✓ تمت المزامنة - ${orders.length} طلب`, 'success');
+  showToast(`✓ تم تحميل ${orders.length} طلب`, 'success');
 }
 
 // ===== Danger Zone =====
