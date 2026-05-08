@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* ===== Login ===== */
     .login-page {
       min-height: 100vh;
       display: flex;
@@ -26,53 +25,14 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
-    .login-box .logo-lg {
-      font-size: 50px;
-      color: #e94560;
-      margin-bottom: 10px;
-    }
-
-    .login-box h2 {
-      font-size: 24px;
-      margin-bottom: 5px;
-    }
-
-    .login-box p {
-      color: #636e72;
-      margin-bottom: 25px;
-      font-size: 14px;
-    }
-
-    .login-box input {
-      width: 100%;
-      padding: 14px;
-      border: 2px solid #dfe6e9;
-      border-radius: 10px;
-      font-size: 15px;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .login-box input:focus {
-      border-color: #e94560;
-    }
-
-    .login-box .btn-primary {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-    }
-
-    .login-error {
-      color: #d63031;
-      font-size: 13px;
-      margin-bottom: 10px;
-      display: none;
-    }
-
-    /* ===== Admin Layout ===== */
+    .login-box .logo-lg { font-size: 50px; color: #e94560; margin-bottom: 10px; }
+    .login-box h2 { font-size: 24px; margin-bottom: 5px; }
+    .login-box p { color: #636e72; margin-bottom: 25px; font-size: 14px; }
+    .login-box input { width: 100%; padding: 14px; border: 2px solid #dfe6e9; border-radius: 10px; font-size: 15px; text-align: center; margin-bottom: 15px; }
+    .login-box input:focus { border-color: #e94560; }
+    .login-box .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+    .login-error { color: #d63031; font-size: 13px; margin-bottom: 10px; display: none; }
     .admin-layout { display: none; }
-
     .admin-layout.active { display: flex; }
 
     .admin-sidebar {
@@ -87,16 +47,9 @@
       z-index: 50;
     }
 
-    .admin-sidebar .logo {
-      padding: 0 20px 25px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 15px;
-    }
-
+    .admin-sidebar .logo { padding: 0 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
     .admin-sidebar .logo i { color: #e94560; }
-
     .admin-nav { list-style: none; }
-
     .admin-nav li a {
       display: flex;
       align-items: center;
@@ -108,34 +61,19 @@
       transition: 0.2s;
       border-right: 3px solid transparent;
     }
-
     .admin-nav li a:hover,
     .admin-nav li a.active {
       background: rgba(233,69,96,0.15);
       color: #fff;
       border-right-color: #e94560;
     }
-
     .admin-nav li a i { width: 20px; }
-
-    .admin-main {
-      flex: 1;
-      margin-right: 250px;
-      padding: 30px;
-    }
-
-    .admin-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-
+    .admin-main { flex: 1; margin-right: 250px; padding: 30px; }
+    .admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .admin-topbar h2 { font-size: 22px; }
-
     .admin-topbar h2 i { color: #e94560; margin-left: 8px; }
+    .admin-topbar-actions { display: flex; gap: 8px; align-items: center; }
 
-    /* ===== Stats Cards ===== */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -163,16 +101,13 @@
       font-size: 22px;
       flex-shrink: 0;
     }
-
     .stat-icon.blue { background: #dfe6fd; color: #0984e3; }
     .stat-icon.red { background: #ffe0e0; color: #e94560; }
     .stat-icon.green { background: #d4edda; color: #00b894; }
     .stat-icon.gold { background: #fff3cd; color: #f39c12; }
-
     .stat-info h4 { font-size: 26px; font-weight: 800; }
     .stat-info p { font-size: 13px; color: #636e72; }
 
-    /* ===== Admin Table ===== */
     .admin-card {
       background: #fff;
       border-radius: 14px;
@@ -186,15 +121,11 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .admin-card-header h3 {
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    .admin-card-header h3 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
     .admin-table-wrap { overflow-x: auto; }
 
     .admin-table {
@@ -202,7 +133,6 @@
       border-collapse: collapse;
       font-size: 14px;
     }
-
     .admin-table th {
       background: #f8f9fa;
       padding: 12px 14px;
@@ -212,19 +142,9 @@
       font-size: 13px;
       white-space: nowrap;
     }
-
-    .admin-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #f1f2f6;
-      vertical-align: middle;
-    }
-
+    .admin-table td { padding: 12px 14px; border-bottom: 1px solid #f1f2f6; vertical-align: middle; }
     .admin-table tr:hover td { background: #fafafa; }
-
-    .admin-table .actions {
-      display: flex;
-      gap: 6px;
-    }
+    .admin-table .actions { display: flex; gap: 6px; }
 
     .btn-sm {
       padding: 6px 12px;
@@ -236,13 +156,18 @@
       align-items: center;
       gap: 4px;
     }
-
     .btn-sm.edit { background: #dfe6fd; color: #0984e3; }
     .btn-sm.edit:hover { background: #0984e3; color: #fff; }
     .btn-sm.delete { background: #ffe0e0; color: #d63031; }
     .btn-sm.delete:hover { background: #d63031; color: #fff; }
     .btn-sm.complete { background: #d4edda; color: #00b894; }
     .btn-sm.complete:hover { background: #00b894; color: #fff; }
+    .btn-sm.export { background: #e8f8f5; color: #1abc9c; }
+    .btn-sm.export:hover { background: #1abc9c; color: #fff; }
+    .btn-sm.print { background: #fef9e7; color: #f39c12; }
+    .btn-sm.print:hover { background: #f39c12; color: #fff; }
+    .btn-sm.whatsapp { background: #e8f8f5; color: #25D366; }
+    .btn-sm.whatsapp:hover { background: #25D366; color: #fff; }
 
     .status-badge {
       display: inline-block;
@@ -251,11 +176,13 @@
       font-size: 12px;
       font-weight: 700;
     }
-
     .status-badge.new { background: #dfe6fd; color: #0984e3; }
+    .status-badge.processing { background: #fff3cd; color: #f39c12; }
+    .status-badge.shipped { background: #d4edda; color: #00b894; }
+    .status-badge.delivered { background: #d4edda; color: #1abc9c; }
     .status-badge.completed { background: #d4edda; color: #00b894; }
+    .status-badge.cancelled { background: #ffe0e0; color: #d63031; }
 
-    /* ===== Order Detail Modal ===== */
     .order-detail-item {
       display: flex;
       justify-content: space-between;
@@ -270,30 +197,38 @@
       border-radius: 10px;
       margin: 10px 0;
     }
+    .order-detail-customer p { font-size: 14px; margin-bottom: 6px; }
+    .order-detail-customer i { color: #e94560; width: 20px; }
 
-    .order-detail-customer p {
-      font-size: 14px;
-      margin-bottom: 6px;
+    .order-detail-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+      flex-wrap: wrap;
     }
 
-    .order-detail-customer i {
-      color: #e94560;
-      width: 20px;
+    .no-data { text-align: center; padding: 40px; color: #b2bec3; }
+    .no-data i { font-size: 40px; display: block; margin-bottom: 10px; }
+
+    .admin-filter-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
     }
 
-    .no-data {
-      text-align: center;
-      padding: 40px;
-      color: #b2bec3;
+    .admin-filter-tab {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #f1f2f6;
+      color: #636e72;
+      transition: 0.2s;
     }
+    .admin-filter-tab:hover { background: #dfe6e9; }
+    .admin-filter-tab.active { background: #e94560; color: #fff; }
 
-    .no-data i {
-      font-size: 40px;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    /* ===== Responsive ===== */
     @media (max-width: 768px) {
       .admin-sidebar { width: 60px; overflow: hidden; }
       .admin-sidebar .logo span { display: none; }
@@ -301,11 +236,18 @@
       .admin-main { margin-right: 60px; padding: 15px; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    @media print {
+      .admin-sidebar, .admin-topbar, .btn-sm, .admin-card-header .btn-primary, .order-detail-actions { display: none !important; }
+      .admin-main { margin: 0 !important; padding: 0 !important; }
+      .modal { position: static !important; transform: none !important; box-shadow: none !important; max-height: none !important; }
+      .modal-overlay { display: none !important; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- ===== Login Screen ===== -->
+  <!-- Login -->
   <div class="login-page" id="loginScreen">
     <div class="login-box">
       <div class="logo-lg"><i class="fas fa-store"></i></div>
@@ -317,34 +259,37 @@
     </div>
   </div>
 
-  <!-- ===== Admin Layout ===== -->
+  <!-- Admin Layout -->
   <div class="admin-layout" id="adminLayout">
 
-    <!-- Sidebar -->
     <aside class="admin-sidebar">
       <div class="logo"><i class="fas fa-store"></i> <span>متجري</span></div>
       <ul class="admin-nav">
         <li><a href="#" class="active" onclick="showSection('dashboard', this)"><i class="fas fa-chart-pie"></i> <span>الإحصائيات</span></a></li>
         <li><a href="#" onclick="showSection('products', this)"><i class="fas fa-box"></i> <span>المنتجات</span></a></li>
         <li><a href="#" onclick="showSection('orders', this)"><i class="fas fa-clipboard-list"></i> <span>الطلبات</span></a></li>
+        <li><a href="#" onclick="showSection('categories', this)"><i class="fas fa-tags"></i> <span>الفئات</span></a></li>
         <li><a href="#" onclick="showSection('settings', this)"><i class="fas fa-cog"></i> <span>الإعدادات</span></a></li>
         <li><a href="index.html"><i class="fas fa-store-alt"></i> <span>المتجر</span></a></li>
         <li><a href="#" onclick="logout()" style="color:#e94560;"><i class="fas fa-sign-out-alt"></i> <span>خروج</span></a></li>
       </ul>
     </aside>
 
-    <!-- Main Content -->
     <main class="admin-main">
 
-      <!-- Top Bar -->
       <div class="admin-topbar">
         <h2 id="pageTitle"><i class="fas fa-chart-pie"></i> الإحصائيات</h2>
-        <button class="btn-outline" style="border-color:#e94560;color:#e94560;" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> خروج
-        </button>
+        <div class="admin-topbar-actions">
+          <a href="index.html" class="btn-outline" style="border-color:#e94560;color:#e94560;">
+            <i class="fas fa-store-alt"></i> المتجر
+          </a>
+          <button class="btn-outline" style="border-color:#e94560;color:#e94560;" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> خروج
+          </button>
+        </div>
       </div>
 
-      <!-- ===== Dashboard Section ===== -->
+      <!-- Dashboard -->
       <div id="section-dashboard">
         <div class="stats-grid">
           <div class="stat-card">
@@ -376,9 +321,26 @@
             </div>
           </div>
         </div>
+        <div class="admin-card">
+          <h3 style="margin-bottom:15px;"><i class="fas fa-clock"></i> آخر الطلبات</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>التاريخ</th>
+                  <th>الاسم</th>
+                  <th>المجموع</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <!-- ===== Products Section ===== -->
+      <!-- Products -->
       <div id="section-products" style="display:none;">
         <div class="admin-card">
           <div class="admin-card-header">
@@ -391,8 +353,10 @@
                 <tr>
                   <th>#</th>
                   <th>الاسم</th>
+                  <th>الفئة</th>
                   <th>السعر</th>
-                  <th>الوصف</th>
+                  <th>المخزون</th>
+                  <th>الوسم</th>
                   <th>العمليات</th>
                 </tr>
               </thead>
@@ -406,11 +370,21 @@
         </div>
       </div>
 
-      <!-- ===== Orders Section ===== -->
+      <!-- Orders -->
       <div id="section-orders" style="display:none;">
         <div class="admin-card">
           <div class="admin-card-header">
             <h3><i class="fas fa-clipboard-list"></i> إدارة الطلبات</h3>
+            <button class="btn-sm export" onclick="exportOrdersCSV()"><i class="fas fa-file-csv"></i> تصدير CSV</button>
+          </div>
+          <div class="admin-filter-tabs" id="orderFilters">
+            <button class="admin-filter-tab active" onclick="filterOrders('all', this)">الكل</button>
+            <button class="admin-filter-tab" onclick="filterOrders('جديد', this)">جديد</button>
+            <button class="admin-filter-tab" onclick="filterOrders('قيد المعالجة', this)">قيد المعالجة</button>
+            <button class="admin-filter-tab" onclick="filterOrders('تم الشحن', this)">تم الشحن</button>
+            <button class="admin-filter-tab" onclick="filterOrders('تم التوصيل', this)">تم التوصيل</button>
+            <button class="admin-filter-tab" onclick="filterOrders('مكتمل', this)">مكتمل</button>
+            <button class="admin-filter-tab" onclick="filterOrders('ملغي', this)">ملغي</button>
           </div>
           <div class="admin-table-wrap">
             <table class="admin-table">
@@ -437,7 +411,20 @@
         </div>
       </div>
 
-      <!-- ===== Settings Section ===== -->
+      <!-- Categories -->
+      <div id="section-categories" style="display:none;">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3><i class="fas fa-tags"></i> إدارة الفئات</h3>
+            <button class="btn-primary" onclick="addCategory()"><i class="fas fa-plus"></i> إضافة فئة</button>
+          </div>
+          <div style="max-width:500px;">
+            <div id="categoriesList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
       <div id="section-settings" style="display:none;">
         <div class="admin-card">
           <div class="admin-card-header">
@@ -451,6 +438,11 @@
             <div class="form-group">
               <label>رمز العملة</label>
               <input type="text" id="setCurrency" value="دج" required>
+            </div>
+            <div class="form-group">
+              <label>رقم واتساب (للاستلام الطلبات)</label>
+              <input type="text" id="setWhatsapp" placeholder="مثال: 2135XXXXXXXXX">
+              <small style="color:#636e72;font-size:12px;">أدخل الرقم مع مفتاح الدولة بدون + أو 00</small>
             </div>
             <div class="form-group">
               <label>كلمة السر (للإدارة)</label>
@@ -477,7 +469,7 @@
     </main>
   </div>
 
-  <!-- ===== Product Modal ===== -->
+  <!-- Product Modal -->
   <div class="modal-overlay" id="productOverlay" onclick="closeProductModal()"></div>
   <div class="modal" id="productModal">
     <div class="modal-header">
@@ -491,8 +483,21 @@
         <input type="text" id="productName" required placeholder="مثال: حذاء M1">
       </div>
       <div class="form-group">
+        <label>الفئة</label>
+        <div style="display:flex;gap:8px;">
+          <select id="productCategory" style="flex:1;padding:11px 14px;border:2px solid #dfe6e9;border-radius:8px;font-size:14px;">
+            <option value="">بدون فئة</option>
+          </select>
+          <input type="text" id="productNewCategory" placeholder="فئة جديدة" style="flex:1;padding:11px 14px;border:2px solid #dfe6e9;border-radius:8px;font-size:14px;display:none;">
+        </div>
+      </div>
+      <div class="form-group">
         <label>السعر</label>
         <input type="number" id="productPrice" required min="0" step="1" placeholder="مثال: 220">
+      </div>
+      <div class="form-group">
+        <label>السعر القديم (اختياري - للتخفيضات)</label>
+        <input type="number" id="productOldPrice" min="0" step="1" placeholder="مثال: 300">
       </div>
       <div class="form-group">
         <label>الوصف</label>
@@ -501,7 +506,6 @@
       <div class="form-group">
         <label>رابط الصورة (اختياري)</label>
         <input type="url" id="productImage" placeholder="https://example.com/image.jpg">
-        <small style="color:#636e72;font-size:12px;">إذا ما حطيت رابط، راح تظهر أيقونة</small>
       </div>
       <div class="form-group">
         <label>الأيقونة (إذا ما عندك صورة)</label>
@@ -518,13 +522,26 @@
           <option value="fa-gift">🎁 هدية</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>الوسم (اختياري)</label>
+        <select id="productBadge">
+          <option value="">بدون</option>
+          <option value="new">🆕 جديد</option>
+          <option value="featured">⭐ مميز</option>
+          <option value="sale">🔥 تخفيض</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>المخزون (اختياري - اترك فارغاً لعدم التتبع)</label>
+        <input type="number" id="productStock" min="0" step="1" placeholder="الكمية المتوفرة">
+      </div>
       <button type="submit" class="btn-primary" style="width:100%;padding:14px;">
         <i class="fas fa-save"></i> <span id="productSubmitText">إضافة المنتج</span>
       </button>
     </form>
   </div>
 
-  <!-- ===== Order Detail Modal ===== -->
+  <!-- Order Detail Modal -->
   <div class="modal-overlay" id="orderOverlay" onclick="closeOrderModal()"></div>
   <div class="modal" id="orderModal">
     <div class="modal-header">
