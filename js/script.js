@@ -389,7 +389,7 @@ function sendWhatsAppOrder() {
 }
 
 // ===== Submit Order =====
-function submitOrder(e) {
+async function submitOrder(e) {
   e.preventDefault();
 
   const settings = getStoreSettings();
@@ -405,7 +405,7 @@ function submitOrder(e) {
     status: 'جديد'
   };
 
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  const orders = await SHARED_API.getOrders();
   orders.unshift(order);
   localStorage.setItem('materny_orders', JSON.stringify(orders));
 
@@ -418,6 +418,9 @@ function submitOrder(e) {
     }
   });
   localStorage.setItem('materny_products', JSON.stringify(products));
+
+  // Sync to GitHub
+  SHARED_API.saveOrders(orders);
 
   cart = [];
   saveCart();
@@ -444,7 +447,7 @@ function submitOrder(e) {
 }
 
 // ===== Order Tracking =====
-function trackOrder() {
+async function trackOrder() {
   const phone = document.getElementById('trackPhone').value.trim();
   const result = document.getElementById('trackResult');
 
@@ -453,7 +456,8 @@ function trackOrder() {
     return;
   }
 
-  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
+  result.innerHTML = '<p style="color:#636e72;">جاري البحث...</p>';
+  const orders = await SHARED_API.getOrders();
   const userOrders = orders.filter(o => o.phone === phone);
 
   if (userOrders.length === 0) {
