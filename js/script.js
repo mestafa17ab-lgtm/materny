@@ -388,6 +388,47 @@ function sendWhatsAppOrder() {
   window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
+// ===== GitHub Sync Helpers =====
+function getGithubToken() {
+  const s = getStoreSettings();
+  return s.github_token || '';
+}
+
+async function syncOrdersFromGithub() {
+  const token = getGithubToken();
+  if (!token) return JSON.parse(localStorage.getItem('materny_orders')) || [];
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/mestafa17ab-lgtm/materny/main/data/orders.json?' + Date.now());
+    const data = await res.json();
+    const orders = data.orders || [];
+    localStorage.setItem('materny_orders', JSON.stringify(orders));
+    return orders;
+  } catch (e) {
+    return JSON.parse(localStorage.getItem('materny_orders')) || [];
+  }
+}
+
+async function syncOrdersToGithub(orders) {
+  const token = getGithubToken();
+  if (!token) return false;
+  try {
+    localStorage.setItem('materny_orders', JSON.stringify(orders));
+    const r1 = await fetch('https://api.github.com/repos/mestafa17ab-lgtm/materny/contents/data/orders.json', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const current = await r1.json();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ orders: orders }, null, 2))));
+    const r2 = await fetch('https://api.github.com/repos/mestafa17ab-lgtm/materny/contents/data/orders.json', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'تحديث الطلبات', content: content, sha: current.sha })
+    });
+    return r2.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ===== Submit Order =====
 async function submitOrder(e) {
   e.preventDefault();
@@ -405,7 +446,7 @@ async function submitOrder(e) {
     status: 'جديد'
   };
 
-  const orders = await SHARED_API.getOrders();
+  const orders = JSON.parse(localStorage.getItem('materny_orders')) || [];
   orders.unshift(order);
   localStorage.setItem('materny_orders', JSON.stringify(orders));
 
@@ -419,8 +460,8 @@ async function submitOrder(e) {
   });
   localStorage.setItem('materny_products', JSON.stringify(products));
 
-  // Sync to GitHub
-  SHARED_API.saveOrders(orders);
+  // Try to sync to GitHub if token is set
+  syncOrdersToGithub(orders);
 
   cart = [];
   saveCart();
@@ -457,7 +498,7 @@ async function trackOrder() {
   }
 
   result.innerHTML = '<p style="color:#636e72;">جاري البحث...</p>';
-  const orders = await SHARED_API.getOrders();
+  const orders = await syncOrdersFromGithub();
   const userOrders = orders.filter(o => o.phone === phone);
 
   if (userOrders.length === 0) {
