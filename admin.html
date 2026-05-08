@@ -457,9 +457,12 @@
               <input type="text" id="setPassword" placeholder="أدخل كلمة سر جديدة">
               <small style="color:#636e72;font-size:12px;">اتركها فارغة إذا ما تحبش تغيرها</small>
             </div>
-            <div style="margin-bottom:15px;">
-              <button type="button" class="btn-secondary" onclick="manualSync()" style="width:100%;">
-                <i class="fas fa-sync"></i> مزامنة الطلبات الآن
+            <div style="margin-bottom:15px;display:flex;gap:8px;">
+              <button type="button" class="btn-primary" onclick="pushOrders()" style="flex:1;">
+                <i class="fas fa-upload"></i> رفع الطلبات إلى GitHub
+              </button>
+              <button type="button" class="btn-secondary" onclick="pullOrders()" style="flex:1;">
+                <i class="fas fa-download"></i> تحميل الطلبات
               </button>
             </div>
             <button type="submit" class="btn-primary"><i class="fas fa-save"></i> حفظ الإعدادات</button>
